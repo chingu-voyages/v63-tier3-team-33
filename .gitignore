@@ -1,2 +1,21 @@
 # MacOS-specific files
 .DS_Store
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+
+# Local environment and credentials
+.env*
+!.env.example
+*.pem
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
