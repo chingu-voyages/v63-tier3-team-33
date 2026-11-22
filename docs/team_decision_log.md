@@ -1,43 +1,20 @@
-# Team Decision Log
+## Finalized
 
-Update this with key decisions your team makes that you need to make...and 
-remember. The entries in this table are only examples. You may add, change, or
-delete these based on the needs of your team.
-
-To set this up add each teammates name in the `teammate name` column. Each 
-team member should Place an 'X' under their name to vote for the ideas 
-you like the best.
-
-| No. | Question/Option | Teammate name | Teammate name | Teammate name | Teammate name | Teammate name | Teammate name |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | Team meeting schedule | | | | | | |
-|   |	- Sprint Planning Sunday@9:00 a.m. CST | | | | | | |
-|   |	- Knowledge Xfer as needed | | | | | | |
-|   |	- Working Session Thursday@4:00 p.m. CST | | | | | | |
-| 2	| Project Backlog Tool | | | | | | |
-|   |	- Notion | | | | | | |
-|   |	- Jira | | | | | | |
-| 3	| Technical Stack (vote by adding your pref. in the cell under your name) | | | | | | |
-|   |	- BE Language | | | | | | |
-|   |	- FE Language | | | | | | |
-|   |	- FE Framework | | | | | | |
-|   |	- ML Framework | | | | | | |
-|   |	- Visualization/Graphics package (if required, e.g. D3, Nivo, etc.) | | | | | | |
-| 4	| Where to host the app? | | | | | | |
-|   |	- Heroku (suitable for FE, BE, & Postgres) | | | | | | |
-|   |	- Netlify (suitable only for FE) | | | | | | |
-|   |	- Vercel (suitable only for FE) | | | | | | |
-|   |	- Mongo Atlas (suitable only for MongoDB) | | | | | | |
-| 5	| BE/FE repos organization | | | | | | |
-|   |	- Separate GitHub repos for each | | | | | | |
-|   |	- Single GitHub repo for both | | | | | | |
-| 6	| Wireframing tool | | | | | | |
-|   |	- Paper & pencil | | | | | | |
-|   |	- Adobe XD | | | | | | |
-|   |	- Balsamiq | | | | | | |
-|   |	- Figma | | | | | | |
-| 7	| Who works in which part of the app? | | | | | | |
-|   | - BE (not applicable for Tier 1 teams) | | | | | | |
-|   |	- FE | | | | | | |
-| 8	| ... | | | | | | |
-| n | ... | | | | | | |
+| Area | Decision |
+| --- | --- |
+| Project | Event Planner |
+| Planning | Jira is the source of truth for tasks, priorities, and progress. |
+| Code collaboration | GitHub is the source of truth for code, branches, commits, and PRs. |
+| Framework and language | Next.js App Router with TypeScript. |
+| Runtime | Node.js 26 or newer. |
+| Backend | Next.js server-side functionality; no separate Express server. |
+| Database and backend services | Use the team's Supabase project shared via Discord; credentials belong in environment variables, with service-role secrets server-side only. |
+| Styling | Tailwind CSS. |
+| Deployment | Vercel. |
+| Branching | `main` is production-ready; `development` is the integration branch. Task branches start from and target `development`; releases reach `main` intentionally from `development`. |
+| Branch names | `<jira-issue-key>/<type>/<description>`; common types are `feature`, `fix`, `docs`, `test`, `refactor`, and `chore`. |
+| Pull requests | Small and focused, approximately 50-150 changed lines when practical; explain what and why, reference Jira, avoid unrelated changes, and address feedback. |
+| Review | Two human reviewers approve each PR. |
+| Definition of Done | Meet Jira acceptance criteria; add or update and pass relevant tests; obtain two human reviews; update documentation when needed; introduce no known regressions or breakage. |
+| Coordination | Weekly meeting Tuesday/Wednesday, 1:00–2:00 PM EST (18:00–19:00 UTC). |
+| AI assistance | Permitted with developer ownership and understanding; normal review, testing, and quality standards still apply. |
