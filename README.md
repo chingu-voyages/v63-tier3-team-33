@@ -91,4 +91,5 @@ application test suite or development server.
 ## Our Team
 
 - Teammate name: Djombissi Mintsa Steve Daniels / [Github.com/DMSD/003](https://github.com/DMSD003) 
+- Teammate name: Mikey Nichols / [mnichols08](https://github.com/mnichols08) / [LinkedIn](https://linkedin.com/in/mnix-dev)
 - Teammate name #n: [GitHub](https://github.com/ghaccountname) / [LinkedIn](https://linkedin.com/in/liaccountname)
