@@ -9,14 +9,21 @@ import { cookies } from "next/headers";
  *
  * It isn't signed. Editing it only lets someone change which error message
  * they see; a valid code is still required to verify.
+ *
+ * `purpose` keeps the two flows apart: a sign-up cookie can't drive the
+ * password-reset screens and vice versa.
  */
 const COOKIE_NAME = "ep_pending_verification";
 const MAX_AGE_SECONDS = 60 * 60 * 24;
 
-export type PendingVerification = { email: string; sentAt: number };
+export type VerificationPurpose = "signup" | "recovery";
+export type PendingVerification = { email: string; sentAt: number; purpose: VerificationPurpose };
 
-export async function setPendingVerification(email: string): Promise<void> {
-  const value: PendingVerification = { email, sentAt: Date.now() };
+export async function setPendingVerification(
+  email: string,
+  purpose: VerificationPurpose = "signup",
+): Promise<void> {
+  const value: PendingVerification = { email, sentAt: Date.now(), purpose };
   (await cookies()).set(COOKIE_NAME, JSON.stringify(value), {
     httpOnly: true,
     sameSite: "lax",
@@ -26,7 +33,10 @@ export async function setPendingVerification(email: string): Promise<void> {
   });
 }
 
-export async function getPendingVerification(): Promise<PendingVerification | null> {
+/** Returns the pending verification only if it was started for `purpose`. */
+export async function getPendingVerification(
+  purpose: VerificationPurpose = "signup",
+): Promise<PendingVerification | null> {
   const raw = (await cookies()).get(COOKIE_NAME)?.value;
   if (!raw) return null;
   try {
@@ -39,7 +49,10 @@ export async function getPendingVerification(): Promise<PendingVerification | nu
       typeof parsed.email === "string" &&
       typeof parsed.sentAt === "number"
     ) {
-      return { email: parsed.email, sentAt: parsed.sentAt };
+      // Cookies written before `purpose` existed were always sign-ups.
+      const stored = "purpose" in parsed && parsed.purpose === "recovery" ? "recovery" : "signup";
+      if (stored !== purpose) return null;
+      return { email: parsed.email, sentAt: parsed.sentAt, purpose: stored };
     }
   } catch {
     // Malformed cookie: treat as missing.
