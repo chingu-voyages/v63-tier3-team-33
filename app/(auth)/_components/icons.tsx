@@ -57,6 +57,13 @@ export const BriefcaseIcon = (props: IconProps) => (
   </Icon>
 );
 
+export const UserIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M20 21a8 8 0 0 0-16 0" />
+  </Icon>
+);
+
 export const MailIcon = (props: IconProps) => (
   <Icon {...props}>
     <rect width="20" height="16" x="2" y="4" rx="2" />
