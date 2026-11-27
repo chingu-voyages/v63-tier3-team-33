@@ -33,6 +33,15 @@ export const CalendarCheckIcon = (props: IconProps) => (
   </Icon>
 );
 
+export const UsersIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </Icon>
+);
+
 export const LogInIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
@@ -41,10 +50,24 @@ export const LogInIcon = (props: IconProps) => (
   </Icon>
 );
 
+export const BriefcaseIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect width="20" height="14" x="2" y="7" rx="2" />
+    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+  </Icon>
+);
+
 export const MailIcon = (props: IconProps) => (
   <Icon {...props}>
     <rect width="20" height="16" x="2" y="4" rx="2" />
     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+  </Icon>
+);
+
+export const SearchIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.3-4.3" />
   </Icon>
 );
 
@@ -74,5 +97,11 @@ export const EyeOffIcon = (props: IconProps) => (
 export const ArrowRightIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M5 12h14M12 5l7 7-7 7" />
+  </Icon>
+);
+
+export const ChevronDownIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="m6 9 6 6 6-6" />
   </Icon>
 );
