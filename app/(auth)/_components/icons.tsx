@@ -32,3 +32,9 @@ export const CalendarCheckIcon = (props: IconProps) => (
     <path d="m9 16 2 2 4-4" />
   </Icon>
 );
+
+export const ArrowRightIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M5 12h14M12 5l7 7-7 7" />
+  </Icon>
+);
