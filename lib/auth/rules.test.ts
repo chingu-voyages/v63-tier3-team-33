@@ -7,6 +7,7 @@ import {
   OTP_EXPIRY_SECONDS,
   authErrorMessage,
   hasErrors,
+  passwordStrength,
   homePathFor,
   isRole,
   isSelfServiceRole,
@@ -118,6 +119,17 @@ describe("readSignUpForm", () => {
     const formData = new FormData();
     formData.set("referralSource", "<script>");
     assert.equal(readSignUpForm(formData).referralSource, "");
+  });
+});
+
+describe("passwordStrength", () => {
+  it("scores passwords from empty to strong", () => {
+    assert.deepEqual(passwordStrength(""), { score: 0, label: "" });
+    assert.deepEqual(passwordStrength("abc"), { score: 1, label: "Too short" });
+    assert.deepEqual(passwordStrength("abcdefgh"), { score: 1, label: "Weak" });
+    assert.deepEqual(passwordStrength("abcdefg1"), { score: 2, label: "Fair" });
+    assert.deepEqual(passwordStrength("Abcdefg1"), { score: 3, label: "Good" });
+    assert.deepEqual(passwordStrength("Abcdefgh123!"), { score: 4, label: "Strong" });
   });
 });
 

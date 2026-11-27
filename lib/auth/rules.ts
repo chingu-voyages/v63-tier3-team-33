@@ -142,6 +142,24 @@ export function validateSignUp(input: SignUpInput): SignUpErrors {
   return errors;
 }
 
+export type PasswordStrength = { score: 0 | 1 | 2 | 3 | 4; label: string };
+
+/**
+ * Rough strength for the 4-bar meter on the sign-up form. It's guidance only:
+ * the real rules are the minimum length (above) and Supabase's own checks.
+ */
+export function passwordStrength(password: string): PasswordStrength {
+  if (!password) return { score: 0, label: "" };
+  if (password.length < PASSWORD_MIN_LENGTH) return { score: 1, label: "Too short" };
+
+  // How many kinds of character: lowercase, uppercase, digits, symbols.
+  const variety = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((kind) => kind.test(password)).length;
+  if (password.length >= 12 && variety >= 3) return { score: 4, label: "Strong" };
+  if (variety >= 3) return { score: 3, label: "Good" };
+  if (variety === 2) return { score: 2, label: "Fair" };
+  return { score: 1, label: "Weak" };
+}
+
 export function hasErrors(errors: object): boolean {
   return Object.keys(errors).length > 0;
 }
