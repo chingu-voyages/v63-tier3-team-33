@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { homePathFor, isRole, isSelfServiceRole, type Role } from "./rules";
 
-type ProfileRow = { full_name: string; role: string };
+type ProfileRow = { full_name: string; role: string; role_chosen: boolean };
 
 export type CurrentUser = {
   id: string;
@@ -49,11 +49,16 @@ export async function requireUser(...allowed: Role[]): Promise<CurrentUser> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role")
+    .select("full_name, role, role_chosen")
     .eq("id", userId)
     .maybeSingle<ProfileRow>();
   const role = profile?.role;
   if (!profile || !isRole(role)) redirect("/sign-in");
+
+  // A brand-new Google user is a placeholder "guest" until they pick an
+  // account type. Without this check they could skip that step by typing
+  // /dashboard into the address bar.
+  if (!profile.role_chosen) redirect("/choose-account-type");
 
   if (allowed.length > 0 && !allowed.includes(role)) {
     redirect(homePathFor(role));
