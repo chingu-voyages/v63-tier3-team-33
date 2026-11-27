@@ -142,3 +142,10 @@ export const RocketIcon = (props: IconProps) => (
     <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
   </Icon>
 );
+
+export const PencilIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z" />
+    <path d="m15 5 4 4" />
+  </Icon>
+);

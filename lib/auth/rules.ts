@@ -160,6 +160,12 @@ export function passwordStrength(password: string): PasswordStrength {
   return { score: 1, label: "Weak" };
 }
 
+/** 42 -> "0:42", 75 -> "1:15". Used by the resend countdown. */
+export function formatCountdown(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.ceil(totalSeconds));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
 export function hasErrors(errors: object): boolean {
   return Object.keys(errors).length > 0;
 }
