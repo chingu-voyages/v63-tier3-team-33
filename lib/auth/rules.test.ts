@@ -6,6 +6,7 @@ import {
   AUTH_MESSAGES,
   OTP_EXPIRY_SECONDS,
   authErrorMessage,
+  formatCountdown,
   hasErrors,
   passwordStrength,
   homePathFor,
@@ -130,6 +131,15 @@ describe("passwordStrength", () => {
     assert.deepEqual(passwordStrength("abcdefg1"), { score: 2, label: "Fair" });
     assert.deepEqual(passwordStrength("Abcdefg1"), { score: 3, label: "Good" });
     assert.deepEqual(passwordStrength("Abcdefgh123!"), { score: 4, label: "Strong" });
+  });
+});
+
+describe("formatCountdown", () => {
+  it("formats seconds as m:ss", () => {
+    assert.equal(formatCountdown(42), "0:42");
+    assert.equal(formatCountdown(60), "1:00");
+    assert.equal(formatCountdown(0), "0:00");
+    assert.equal(formatCountdown(-5), "0:00");
   });
 });
 
