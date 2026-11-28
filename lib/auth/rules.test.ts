@@ -6,7 +6,9 @@ import {
   AUTH_MESSAGES,
   OTP_EXPIRY_SECONDS,
   authErrorMessage,
+  formatCountdown,
   hasErrors,
+  passwordStrength,
   homePathFor,
   isRole,
   isSelfServiceRole,
@@ -121,6 +123,26 @@ describe("readSignUpForm", () => {
   });
 });
 
+describe("passwordStrength", () => {
+  it("scores passwords from empty to strong", () => {
+    assert.deepEqual(passwordStrength(""), { score: 0, label: "" });
+    assert.deepEqual(passwordStrength("abc"), { score: 1, label: "Too short" });
+    assert.deepEqual(passwordStrength("abcdefgh"), { score: 1, label: "Weak" });
+    assert.deepEqual(passwordStrength("abcdefg1"), { score: 2, label: "Fair" });
+    assert.deepEqual(passwordStrength("Abcdefg1"), { score: 3, label: "Good" });
+    assert.deepEqual(passwordStrength("Abcdefgh123!"), { score: 4, label: "Strong" });
+  });
+});
+
+describe("formatCountdown", () => {
+  it("formats seconds as m:ss", () => {
+    assert.equal(formatCountdown(42), "0:42");
+    assert.equal(formatCountdown(60), "1:00");
+    assert.equal(formatCountdown(0), "0:00");
+    assert.equal(formatCountdown(-5), "0:00");
+  });
+});
+
 describe("validateOtp", () => {
   it("accepts 6-10 digit codes", () => {
     assert.equal(validateOtp("123456"), undefined);
@@ -159,6 +181,11 @@ describe("authErrorMessage", () => {
     assert.equal(authErrorMessage({ code: "user_already_exists" }), AUTH_MESSAGES.emailTaken);
     assert.equal(authErrorMessage({ code: "over_email_send_rate_limit" }), AUTH_MESSAGES.rateLimited);
     assert.equal(authErrorMessage({ code: "invalid_credentials" }), AUTH_MESSAGES.invalidCredentials);
+  });
+
+  it("explains a failed CAPTCHA and keeps rate-limit wording for too many attempts", () => {
+    assert.equal(authErrorMessage({ code: "captcha_failed" }), AUTH_MESSAGES.captchaFailed);
+    assert.equal(authErrorMessage({ code: "over_request_rate_limit" }), AUTH_MESSAGES.rateLimited);
   });
 
   it("detects email delivery failures", () => {

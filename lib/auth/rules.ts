@@ -81,6 +81,12 @@ export type SignUpInput = {
 
 export type SignUpErrors = Partial<Record<keyof SignUpInput, string>>;
 
+export function validateEmail(email: string): string | undefined {
+  if (!email) return "Enter your email address.";
+  if (!EMAIL_PATTERN.test(email)) return "Enter a valid email address, like name@example.com.";
+  return undefined;
+}
+
 export function normaliseEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -112,11 +118,8 @@ export function validateSignUp(input: SignUpInput): SignUpErrors {
     errors.fullName = `Full name must be ${FULL_NAME_MAX_LENGTH} characters or fewer.`;
   }
 
-  if (!input.email) {
-    errors.email = "Enter your email address.";
-  } else if (!EMAIL_PATTERN.test(input.email)) {
-    errors.email = "Enter a valid email address, like name@example.com.";
-  }
+  const emailError = validateEmail(input.email);
+  if (emailError) errors.email = emailError;
 
   if (!input.password) {
     errors.password = "Create a password.";
@@ -140,6 +143,30 @@ export function validateSignUp(input: SignUpInput): SignUpErrors {
   }
 
   return errors;
+}
+
+export type PasswordStrength = { score: 0 | 1 | 2 | 3 | 4; label: string };
+
+/**
+ * Rough strength for the 4-bar meter on the sign-up form. It's guidance only:
+ * the real rules are the minimum length (above) and Supabase's own checks.
+ */
+export function passwordStrength(password: string): PasswordStrength {
+  if (!password) return { score: 0, label: "" };
+  if (password.length < PASSWORD_MIN_LENGTH) return { score: 1, label: "Too short" };
+
+  // How many kinds of character: lowercase, uppercase, digits, symbols.
+  const variety = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((kind) => kind.test(password)).length;
+  if (password.length >= 12 && variety >= 3) return { score: 4, label: "Strong" };
+  if (variety >= 3) return { score: 3, label: "Good" };
+  if (variety === 2) return { score: 2, label: "Fair" };
+  return { score: 1, label: "Weak" };
+}
+
+/** 42 -> "0:42", 75 -> "1:15". Used by the resend countdown. */
+export function formatCountdown(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.ceil(totalSeconds));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 export function hasErrors(errors: object): boolean {
@@ -169,6 +196,7 @@ export const AUTH_MESSAGES = {
     "That password is too easy to guess. Try a longer one with a mix of letters, numbers and symbols.",
   verificationSessionMissing:
     "Your verification session has expired. Sign in to get a new code.",
+  captchaFailed: "We couldn't confirm you're not a robot. Please try the check again.",
   generic: "Something went wrong. Please try again.",
 } as const;
 
@@ -192,6 +220,8 @@ export function authErrorMessage(error: AuthErrorLike): string {
       return AUTH_MESSAGES.weakPassword;
     case "invalid_credentials":
       return AUTH_MESSAGES.invalidCredentials;
+    case "captcha_failed":
+      return AUTH_MESSAGES.captchaFailed;
     // Returned while the project still uses Supabase's built-in mailer, which
     // only delivers to team members. Configuring Brevo SMTP fixes it.
     case "email_address_not_authorized":
