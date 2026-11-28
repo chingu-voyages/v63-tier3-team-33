@@ -12,7 +12,6 @@ import {
   AUTH_MESSAGES,
   authErrorMessage,
   hasErrors,
-  normaliseEmail,
   otpErrorMessage,
   readSignUpForm,
   validateOtp,
@@ -129,39 +128,3 @@ export async function resendCode(): Promise<ResendState> {
   return { notice: "A new code is on its way. Older codes no longer work.", sentAt: Date.now() };
 }
 
-// --- Sign in ----------------------------------------------------------------
-
-export type SignInState = { message?: string; email?: string };
-
-export async function signIn(_prev: SignInState, formData: FormData): Promise<SignInState> {
-  const email = normaliseEmail(String(formData.get("email") ?? ""));
-  const password = String(formData.get("password") ?? "");
-  if (!email || !password) {
-    return { message: "Enter your email and password.", email };
-  }
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error?.code === "email_not_confirmed") {
-    // The account exists but was never verified. Send a fresh code and pick up
-    // where they left off. If we're rate limited, the last code is still valid.
-    await supabase.auth.resend({ type: "signup", email });
-    await setPendingVerification(email);
-    redirect("/verify-email");
-  }
-  if (error || !data.user) {
-    return { message: error ? authErrorMessage(error) : AUTH_MESSAGES.generic, email };
-  }
-
-  redirect(landingPathFor(data.user));
-}
-
-// --- Sign out ---------------------------------------------------------------
-
-export async function signOut(): Promise<void> {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  await clearPendingVerification();
-  redirect("/sign-in");
-}
