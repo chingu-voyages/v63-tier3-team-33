@@ -183,6 +183,11 @@ describe("authErrorMessage", () => {
     assert.equal(authErrorMessage({ code: "invalid_credentials" }), AUTH_MESSAGES.invalidCredentials);
   });
 
+  it("explains a failed CAPTCHA and keeps rate-limit wording for too many attempts", () => {
+    assert.equal(authErrorMessage({ code: "captcha_failed" }), AUTH_MESSAGES.captchaFailed);
+    assert.equal(authErrorMessage({ code: "over_request_rate_limit" }), AUTH_MESSAGES.rateLimited);
+  });
+
   it("detects email delivery failures", () => {
     const error = { status: 500, code: "unexpected_failure", message: "Error sending confirmation email" };
     assert.equal(authErrorMessage(error), AUTH_MESSAGES.emailDeliveryFailed);
