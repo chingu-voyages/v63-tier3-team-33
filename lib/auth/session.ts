@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { homePathFor, isRole, isSelfServiceRole, type Role } from "./rules";
+import { isDemoVisitor } from "./signin";
 
 type ProfileRow = { full_name: string; role: string; role_chosen: boolean };
 
@@ -52,6 +53,11 @@ export async function requireUser(...allowed: Role[]): Promise<CurrentUser> {
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims.sub;
   if (!userId) redirect("/sign-in");
+
+  // Never let an anonymous Supabase session act as an account. (Guest access
+  // is the public /demo, which has no session; see lib/auth/signin.ts. This is
+  // the safety net in case anonymous sign-ins are ever switched on.)
+  if (isDemoVisitor(data.claims)) redirect("/sign-in");
 
   const { data: profile } = await supabase
     .from("profiles")
