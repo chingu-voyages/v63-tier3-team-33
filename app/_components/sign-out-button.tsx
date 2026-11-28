@@ -1,4 +1,4 @@
-import { signOut } from "@/app/(auth)/actions";
+import { signOut } from "@/app/(auth)/sign-in-actions";
 
 export function SignOutButton() {
   return (
