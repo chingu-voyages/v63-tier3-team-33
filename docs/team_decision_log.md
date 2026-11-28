@@ -17,4 +17,5 @@
 | Review | Two human reviewers approve each PR. |
 | Definition of Done | Meet Jira acceptance criteria; add or update and pass relevant tests; obtain two human reviews; update documentation when needed; introduce no known regressions or breakage. |
 | Coordination | Weekly meeting Tuesday/Wednesday, 1:00–2:00 PM EST (18:00–19:00 UTC). |
+| Authentication | Supabase Auth (email + password, 6-digit email OTP verification). Roles (`admin`/`manager`/`guest`) live in `public.profiles` protected by RLS; `admin` is granted only via SQL, never at sign-up. Transactional email sent by Brevo via Supabase custom SMTP (no email SDK in the app). See [auth setup](./auth_setup.md). |
 | AI assistance | Permitted with developer ownership and understanding; normal review, testing, and quality standards still apply. |

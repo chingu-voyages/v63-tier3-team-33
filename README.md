@@ -86,6 +86,7 @@ application test suite or development server.
 - [Development workflow](./docs/development_workflow.md)
 - [Team agreement](./docs/team_agreement.md)
 - [Decision log](./docs/team_decision_log.md)
+- [Auth setup (Supabase + Brevo)](./docs/auth_setup.md)
 - [Meeting templates](./docs)
 
 ## Our Team
