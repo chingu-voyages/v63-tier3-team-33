@@ -5,10 +5,14 @@ import assert from "node:assert/strict";
 import {
   AUTH_MESSAGES,
   OTP_EXPIRY_SECONDS,
+  RESET_WINDOW_SECONDS,
   authErrorMessage,
+  canResetPassword,
   formatCountdown,
   hasErrors,
   passwordStrength,
+  validateEmail,
+  validatePasswordPair,
   homePathFor,
   isRole,
   isSelfServiceRole,
@@ -216,6 +220,53 @@ describe("otpErrorMessage", () => {
       otpErrorMessage({ code: "over_request_rate_limit" }, sentAt, sentAt),
       AUTH_MESSAGES.rateLimited,
     );
+  });
+});
+
+describe("validateEmail", () => {
+  it("requires a well-formed address", () => {
+    assert.equal(validateEmail("ada@example.com"), undefined);
+    assert.match(validateEmail("") ?? "", /Enter your email/);
+    assert.match(validateEmail("ada@") ?? "", /valid email/);
+  });
+});
+
+describe("validatePasswordPair", () => {
+  it("accepts matching passwords that meet the minimum length", () => {
+    assert.deepEqual(validatePasswordPair("correct-horse", "correct-horse"), {});
+  });
+
+  it("flags missing, short and mismatched passwords", () => {
+    assert.deepEqual(Object.keys(validatePasswordPair("", "")).sort(), ["confirmPassword", "password"]);
+    assert.match(validatePasswordPair("short", "short").password ?? "", /at least 8/);
+    assert.equal(validatePasswordPair("correct-horse", "other-horse").confirmPassword, "Passwords do not match.");
+  });
+});
+
+describe("canResetPassword", () => {
+  const now = 2_000_000;
+
+  it("allows a session that verified an emailed code within the reset window", () => {
+    assert.ok(canResetPassword([{ method: "otp", timestamp: now - 60 }], now));
+  });
+
+  it("refuses a password-only session (signed in but never verified a code)", () => {
+    assert.ok(!canResetPassword([{ method: "password", timestamp: now }], now));
+  });
+
+  it("refuses once the reset window has passed", () => {
+    assert.ok(!canResetPassword([{ method: "otp", timestamp: now - RESET_WINDOW_SECONDS - 1 }], now));
+  });
+
+  it("refuses missing or string-only claims (no timestamp to check)", () => {
+    assert.ok(!canResetPassword(undefined, now));
+    assert.ok(!canResetPassword(["otp"], now));
+  });
+});
+
+describe("authErrorMessage for password reset", () => {
+  it("explains when the new password matches the old one", () => {
+    assert.equal(authErrorMessage({ code: "same_password" }), AUTH_MESSAGES.samePassword);
   });
 });
 
