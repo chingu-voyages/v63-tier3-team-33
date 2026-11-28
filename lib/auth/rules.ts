@@ -81,6 +81,12 @@ export type SignUpInput = {
 
 export type SignUpErrors = Partial<Record<keyof SignUpInput, string>>;
 
+export function validateEmail(email: string): string | undefined {
+  if (!email) return "Enter your email address.";
+  if (!EMAIL_PATTERN.test(email)) return "Enter a valid email address, like name@example.com.";
+  return undefined;
+}
+
 export function normaliseEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -112,11 +118,8 @@ export function validateSignUp(input: SignUpInput): SignUpErrors {
     errors.fullName = `Full name must be ${FULL_NAME_MAX_LENGTH} characters or fewer.`;
   }
 
-  if (!input.email) {
-    errors.email = "Enter your email address.";
-  } else if (!EMAIL_PATTERN.test(input.email)) {
-    errors.email = "Enter a valid email address, like name@example.com.";
-  }
+  const emailError = validateEmail(input.email);
+  if (emailError) errors.email = emailError;
 
   if (!input.password) {
     errors.password = "Create a password.";
@@ -169,6 +172,7 @@ export const AUTH_MESSAGES = {
     "That password is too easy to guess. Try a longer one with a mix of letters, numbers and symbols.",
   verificationSessionMissing:
     "Your verification session has expired. Sign in to get a new code.",
+  captchaFailed: "We couldn't confirm you're not a robot. Please try the check again.",
   generic: "Something went wrong. Please try again.",
 } as const;
 
@@ -192,6 +196,8 @@ export function authErrorMessage(error: AuthErrorLike): string {
       return AUTH_MESSAGES.weakPassword;
     case "invalid_credentials":
       return AUTH_MESSAGES.invalidCredentials;
+    case "captcha_failed":
+      return AUTH_MESSAGES.captchaFailed;
     // Returned while the project still uses Supabase's built-in mailer, which
     // only delivers to team members. Configuring Brevo SMTP fixes it.
     case "email_address_not_authorized":
