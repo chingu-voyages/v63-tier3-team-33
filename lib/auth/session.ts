@@ -1,6 +1,7 @@
 import "server-only";
 import type { User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { homePathFor, isRole, isSelfServiceRole, type Role } from "./rules";
 
@@ -42,6 +43,11 @@ export function landingPathFor(user: User): string {
  * own home page.
  */
 export async function requireUser(...allowed: Role[]): Promise<CurrentUser> {
+  // Who's signed in is different on every request, so this must never run
+  // while Next.js prerenders. Supabase reads the clock (`Date.now()`) to check
+  // whether the session has expired; without this line `next dev` throws
+  // "encountered the unstable value Date.now()" on every protected page.
+  await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims.sub;
