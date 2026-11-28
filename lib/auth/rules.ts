@@ -109,6 +109,24 @@ export function readSignUpForm(formData: FormData): SignUpInput {
   };
 }
 
+export type PasswordPairErrors = { password?: string; confirmPassword?: string };
+
+/** Shared by sign-up and password reset so both enforce the same rules. */
+export function validatePasswordPair(password: string, confirmPassword: string): PasswordPairErrors {
+  const errors: PasswordPairErrors = {};
+  if (!password) {
+    errors.password = "Create a password.";
+  } else if (password.length < PASSWORD_MIN_LENGTH) {
+    errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+  }
+  if (!confirmPassword) {
+    errors.confirmPassword = "Confirm your password.";
+  } else if (password !== confirmPassword) {
+    errors.confirmPassword = "Passwords do not match.";
+  }
+  return errors;
+}
+
 export function validateSignUp(input: SignUpInput): SignUpErrors {
   const errors: SignUpErrors = {};
 
@@ -121,17 +139,7 @@ export function validateSignUp(input: SignUpInput): SignUpErrors {
   const emailError = validateEmail(input.email);
   if (emailError) errors.email = emailError;
 
-  if (!input.password) {
-    errors.password = "Create a password.";
-  } else if (input.password.length < PASSWORD_MIN_LENGTH) {
-    errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
-  }
-
-  if (!input.confirmPassword) {
-    errors.confirmPassword = "Confirm your password.";
-  } else if (input.password !== input.confirmPassword) {
-    errors.confirmPassword = "Passwords do not match.";
-  }
+  Object.assign(errors, validatePasswordPair(input.password, input.confirmPassword));
 
   // isSelfServiceRole, not isRole: nobody can sign themselves up as admin.
   if (!isSelfServiceRole(input.accountType)) {
@@ -197,8 +205,45 @@ export const AUTH_MESSAGES = {
   verificationSessionMissing:
     "Your verification session has expired. Sign in to get a new code.",
   captchaFailed: "We couldn't confirm you're not a robot. Please try the check again.",
+  samePassword: "Your new password must be different from your current one.",
   generic: "Something went wrong. Please try again.",
 } as const;
+
+// --- Password reset ---------------------------------------------------------
+
+export const RESET_MESSAGES = {
+  // Same wording whether or not the account exists, so the form can't be used
+  // to find out who has an account.
+  codeSent: "If an account exists for that email, we've sent it a verification code.",
+  sessionMissing: "Your reset session has expired. Request a new code to continue.",
+  resetWindowExpired: "For your security, please verify a new code before choosing a password.",
+} as const;
+
+/**
+ * How long after verifying the emailed code the user may set a new password.
+ * Keeps an unattended, still-signed-in browser from being used later.
+ */
+export const RESET_WINDOW_SECONDS = 15 * 60;
+
+/** Matches Supabase's JWT `amr` claim, which may be objects or plain strings. */
+export type AmrClaim = ReadonlyArray<{ method: string; timestamp: number } | string> | undefined;
+
+/**
+ * True if the session proves the user just verified an emailed code.
+ *
+ * Supabase records verifying ANY emailed code as an "otp" entry in the
+ * session's `amr` (authentication methods). Requiring one from the last
+ * RESET_WINDOW_SECONDS means a merely signed-in session (password login)
+ * can't use the reset form to change the password without the code.
+ */
+export function canResetPassword(amr: AmrClaim, nowSeconds: number): boolean {
+  return (amr ?? []).some(
+    (entry) =>
+      typeof entry === "object" &&
+      entry.method === "otp" &&
+      nowSeconds - entry.timestamp <= RESET_WINDOW_SECONDS,
+  );
+}
 
 /** The parts of Supabase's `AuthError` we use (keeps this file framework-free). */
 export type AuthErrorLike = { code?: string; status?: number; message?: string };
@@ -218,6 +263,8 @@ export function authErrorMessage(error: AuthErrorLike): string {
       return AUTH_MESSAGES.rateLimited;
     case "weak_password":
       return AUTH_MESSAGES.weakPassword;
+    case "same_password":
+      return AUTH_MESSAGES.samePassword;
     case "invalid_credentials":
       return AUTH_MESSAGES.invalidCredentials;
     case "captcha_failed":
