@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { REMEMBER_COOKIE, withSessionLifetime } from "@/lib/auth/signin";
 import { getSupabaseEnv } from "./env";
 
 /**
@@ -13,6 +14,8 @@ import { getSupabaseEnv } from "./env";
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const { url, publishableKey } = getSupabaseEnv();
+  // Keep the lifetime the user chose at sign-in when the session is refreshed.
+  const remember = request.cookies.get(REMEMBER_COOKIE)?.value === "1";
 
   const supabase = createServerClient(url, publishableKey, {
     cookies: {
@@ -23,7 +26,7 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options),
+          response.cookies.set(name, value, withSessionLifetime(options, remember)),
         );
         // No-cache headers so a CDN never serves one user's cookies to another.
         Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value));
