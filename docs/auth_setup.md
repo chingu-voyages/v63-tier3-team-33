@@ -88,6 +88,17 @@ Do these once in the shared Supabase project. Each is required.
    ```
 
    Codes also survive corporate link scanners, which can use up magic links before the user clicks them.
+
+   Do the same for **Reset Password** (used by Forgot Password):
+
+   ```html
+   <h2 style="color:#6d28d9">Reset your EventPlanner password</h2>
+   <p>Your verification code is:</p>
+   <p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
+   <p>It expires in 10 minutes. If you didn't ask to reset your password, ignore this email; your password won't change.</p>
+   ```
+
+   Don't include `{{ .Email }}` or a link that signs the user in; the code is enough.
 4. **Connect Brevo SMTP.** In Brevo: Settings → SMTP & API → SMTP → generate an
    SMTP key, and verify the sender domain (DKIM/DMARC). Then in Supabase:
    Authentication → Emails → SMTP Settings → enable custom SMTP:
@@ -106,6 +117,33 @@ Do these once in the shared Supabase project. Each is required.
    the email limit to suit Brevo's plan (free tier: 300/day). The per-address
    resend interval (60s) is what the UI countdown mirrors
    (`RESEND_COOLDOWN_SECONDS`).
+
+## Forgot password
+
+```
+/forgot-password ──resetPasswordForEmail()──► "If an account exists, we've sent a code"
+   ▼                                           (same message whether or not it exists)
+/forgot-password/verify ──verifyOtp(type: "recovery")──► short-lived session
+   │   └─ "resend code" ──resetPasswordForEmail()──► new code; the old one stops working
+   ▼
+/reset-password ──updateUser({ password })──► signed out everywhere ──► /sign-in?reset=1
+```
+
+Server actions: `app/(auth)/password-actions.ts`.
+
+| Requirement | Who handles it |
+| --- | --- |
+| Don't reveal whether an account exists | Supabase returns success for unknown emails; we show one neutral message |
+| Code is single-use and time-limited | Supabase deletes the code once verified; expiry from "Email OTP Expiration" |
+| Rate limiting / resend | Supabase (60s per address); new code replaces the old one |
+| Password hashed, old password invalid | Supabase (`updateUser`) |
+| Other sessions invalidated | Supabase signs out every other session on password change; we then sign out the current one too |
+| Only verified-code sessions can set a password | `canResetPassword()`: the session must have verified an emailed code in the last 15 minutes (`RESET_WINDOW_SECONDS`) |
+
+**Unverified accounts:** if someone who never verified their sign-up uses
+Forgot Password, verifying the reset code also confirms their email. Supabase
+then clears any password set before confirmation, so they must choose a new one.
+That's intended: the code proves they own the address.
 
 ## Local development
 
@@ -133,4 +171,8 @@ npm test                     # unit tests (Node's built-in runner, no deps)
 - **Unverified sign-up again:** if someone signs up again with an email that was
   never verified, Supabase updates that pending account and sends a new code.
   This is intentional, so a typo'd or abandoned sign-up never blocks an address.
-- **Password reset** is not part of this ticket.
+- **Access tokens outlive sign-out.** Signing out revokes refresh tokens, but an
+  already-issued access token stays valid until it expires (1 hour by default).
+  Lower "JWT expiry" in the dashboard if a stricter policy is needed.
+- **Optional:** turn on Authentication → Emails → Notifications → "Password
+  changed" so users are told when their password changes.
